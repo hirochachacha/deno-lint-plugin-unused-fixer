@@ -44,8 +44,7 @@ variables in your TypeScript/JavaScript code.
 
 ## Installation
 
-1. Clone this repository
-2. Configure your `deno.json` to include the plugin:
+1. Configure your `deno.json` to include the plugin:
 
 ```json
 {
