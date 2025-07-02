@@ -1,0 +1,23 @@
+{
+  "tasks": {
+    "test": "deno test tests/ --allow-read --no-check",
+    "test:watch": "deno test tests/ --allow-read --no-check --watch",
+    "lint": "deno lint",
+    "lint:fixtures": "deno lint tests/fixtures/"
+  },
+  "imports": {
+    "@std/assert": "jsr:@std/assert@1"
+  },
+  "lint": {
+    "plugins": ["./src/plugin.ts"],
+    "rules": {
+      "include": [
+        "custom-rules/no-console-time",
+        "custom-rules/prefer-const-enum",
+        "custom-rules/no-magic-numbers",
+        "unused-fixer/no-unused-imports",
+        "unused-fixer/no-unused-vars"
+      ]
+    }
+  }
+}
