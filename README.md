@@ -21,7 +21,10 @@ variables in your TypeScript/JavaScript code.
 ```
 .
 ├── src/
-│   └── plugin.ts                  # Main plugin implementation
+│   ├── plugin.ts                  # Main plugin entry point
+│   └── rules/                     # Individual rule implementations
+│       ├── no-unused-imports.ts   # Unused import detection
+│       └── no-unused-vars.ts      # Unused variable detection
 ├── tests/
 │   ├── fixtures/                  # Test fixtures showing what rules detect
 │   │   ├── no-unused-imports/    # Import test cases
@@ -29,12 +32,12 @@ variables in your TypeScript/JavaScript code.
 │   ├── no-unused-imports.test.ts # Tests for import rule
 │   └── no-unused-vars.test.ts    # Tests for variable rule
 ├── examples/
+│   ├── all-rules-demo.ts         # Example showing both rules in action
 │   └── test-unused.ts            # Example file with unused code
 ├── docs/
 │   └── how-it-works/             # Detailed documentation
 │       ├── fixer-examples.md     # Before/after examples
 │       └── fixer-flow.md         # Step-by-step explanation
-├── mod.ts                        # Main entry point
 ├── deno.json                     # Deno configuration
 └── README.md                     # This file
 ```
@@ -47,7 +50,7 @@ variables in your TypeScript/JavaScript code.
 ```json
 {
   "lint": {
-    "plugins": ["./path/to/src/plugin.ts"],
+    "plugins": ["jsr:@hirochachacha/deno-lint-plugin-unused-fixer"],
     "rules": {
       "include": [
         "unused-fixer/no-unused-imports",

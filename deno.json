@@ -1,4 +1,23 @@
 {
+  "name": "@hirochachacha/deno-lint-plugin-unused-fixer",
+  "version": "0.1.1",
+  "exports": "./src/plugin.ts",
+  "description": "Deno lint plugin that automatically detects and fixes unused imports and variables in TypeScript/JavaScript code",
+  "keywords": [
+    "deno",
+    "lint",
+    "linter",
+    "plugin",
+    "unused",
+    "imports",
+    "variables",
+    "fixer",
+    "typescript",
+    "javascript",
+    "code-quality",
+    "static-analysis",
+    "auto-fix"
+  ],
   "tasks": {
     "test": "deno test tests/ --allow-read --no-check",
     "test:watch": "deno test tests/ --allow-read --no-check --watch",
@@ -9,15 +28,6 @@
     "@std/assert": "jsr:@std/assert@1"
   },
   "lint": {
-    "plugins": ["./src/plugin.ts"],
-    "rules": {
-      "include": [
-        "custom-rules/no-console-time",
-        "custom-rules/prefer-const-enum",
-        "custom-rules/no-magic-numbers",
-        "unused-fixer/no-unused-imports",
-        "unused-fixer/no-unused-vars"
-      ]
-    }
+    "plugins": ["./src/plugin.ts"]
   }
 }
