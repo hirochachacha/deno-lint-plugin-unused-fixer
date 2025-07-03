@@ -4,9 +4,39 @@ export const noUnusedVars = {
     const declaredVars = new Map<string, any>();
     const usedVars = new Set<string>();
     const functionParams = new Set<string>();
+    const exportedVars = new Set<string>();
 
     return {
       VariableDeclarator(node: any) {
+        // Check if this variable is exported
+        let parent = node.parent;
+        while (parent) {
+          if (
+            parent.type === "ExportNamedDeclaration" ||
+            parent.type === "ExportDefaultDeclaration"
+          ) {
+            if (node.id.type === "Identifier") {
+              exportedVars.add(node.id.name);
+            } else if (node.id.type === "ObjectPattern") {
+              node.id.properties.forEach((prop: any) => {
+                if (
+                  prop.type === "Property" && prop.value.type === "Identifier"
+                ) {
+                  exportedVars.add(prop.value.name);
+                }
+              });
+            } else if (node.id.type === "ArrayPattern") {
+              node.id.elements.forEach((elem: any) => {
+                if (elem?.type === "Identifier") {
+                  exportedVars.add(elem.name);
+                }
+              });
+            }
+            break;
+          }
+          parent = parent.parent;
+        }
+
         if (node.id.type === "Identifier") {
           declaredVars.set(node.id.name, node);
         } else if (node.id.type === "ObjectPattern") {
@@ -67,7 +97,10 @@ export const noUnusedVars = {
 
       "Program:exit"() {
         for (const [varName, declarator] of declaredVars) {
-          if (!usedVars.has(varName) && !functionParams.has(varName)) {
+          if (
+            !usedVars.has(varName) && !functionParams.has(varName) &&
+            !exportedVars.has(varName)
+          ) {
             const parent = declarator.parent;
 
             context.report({

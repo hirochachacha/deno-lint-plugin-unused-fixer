@@ -313,6 +313,88 @@ Deno.test("no-unused-vars: provides fix for removing one of multiple declaration
   assertEquals(fixResult.range[0] < fixResult.range[1], true);
 });
 
+Deno.test("no-unused-vars: exported variables should not be flagged", () => {
+  const reports: any[] = [];
+  const mockContext = {
+    report: (report: any) => reports.push(report),
+  };
+
+  const visitor = rule.create(mockContext);
+
+  // Test export const
+  const exportDecl = {
+    type: "ExportNamedDeclaration",
+    parent: null,
+  };
+
+  const varDecl = {
+    type: "VariableDeclaration",
+    declarations: [],
+    parent: exportDecl,
+  };
+
+  const declarator = {
+    type: "VariableDeclarator",
+    id: { type: "Identifier", name: "exported" },
+    parent: varDecl,
+  };
+
+  varDecl.declarations = [declarator];
+
+  // Visit the node
+  visitor.VariableDeclarator(declarator);
+
+  // Run the exit check
+  if (visitor["Program:exit"]) visitor["Program:exit"]();
+
+  // Should not report exported variable as unused
+  assertEquals(reports.length, 0);
+});
+
+Deno.test("no-unused-vars: destructured exports should not be flagged", () => {
+  const reports: any[] = [];
+  const mockContext = {
+    report: (report: any) => reports.push(report),
+  };
+
+  const visitor = rule.create(mockContext);
+
+  // Test export const { a, b } = obj
+  const exportDecl = {
+    type: "ExportNamedDeclaration",
+    parent: null,
+  };
+
+  const varDecl = {
+    type: "VariableDeclaration",
+    declarations: [],
+    parent: exportDecl,
+  };
+
+  const declarator = {
+    type: "VariableDeclarator",
+    id: {
+      type: "ObjectPattern",
+      properties: [
+        { type: "Property", value: { type: "Identifier", name: "theme" } },
+        { type: "Property", value: { type: "Identifier", name: "lang" } },
+      ],
+    },
+    parent: varDecl,
+  };
+
+  varDecl.declarations = [declarator];
+
+  // Visit the node
+  visitor.VariableDeclarator(declarator);
+
+  // Run the exit check
+  if (visitor["Program:exit"]) visitor["Program:exit"]();
+
+  // Should not report exported destructured variables as unused
+  assertEquals(reports.length, 0);
+});
+
 Deno.test("no-unused-vars: handles null elements in array pattern", () => {
   const code = `const [, second, , fourth] = array;`;
   const { context, reports } = createMockContext(code);
