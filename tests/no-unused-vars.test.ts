@@ -426,3 +426,95 @@ Deno.test("no-unused-vars: handles null elements in array pattern", () => {
   assertEquals(messages[0], "Unused variable 'fourth'");
   assertEquals(messages[1], "Unused variable 'second'");
 });
+
+Deno.test("no-unused-vars: handles type narrowing with 'as' cast", () => {
+  const code = `function handleInput(e: Event) {
+  const value = (e.target as HTMLTextAreaElement).value;
+  console.log(value);
+}`;
+  const { context, reports } = createMockContext(code);
+
+  const visitor = rule.create(context);
+
+  // Function with parameter 'e'
+  visitor.FunctionDeclaration({
+    type: "FunctionDeclaration",
+    params: [
+      { type: "Identifier", name: "e" },
+    ],
+  });
+
+  // Variable declaration for 'value'
+  visitor.VariableDeclarator({
+    type: "VariableDeclarator",
+    id: { type: "Identifier", name: "value" },
+    parent: { type: "VariableDeclaration", declarations: [] },
+  });
+
+  // e.target is used in a type assertion context
+  // In TypeScript AST, this would be:
+  // TSAsExpression > MemberExpression > Identifier(e)
+  visitor.Identifier({
+    name: "e",
+    parent: {
+      type: "MemberExpression",
+      parent: {
+        type: "TSAsExpression",
+      },
+    },
+  });
+
+  // 'value' is used in console.log
+  visitor.Identifier({
+    name: "value",
+    parent: { type: "CallExpression" },
+  });
+
+  if (visitor["Program:exit"]) visitor["Program:exit"]();
+
+  // 'e' is a function parameter and should not be reported
+  // 'value' is used and should not be reported
+  assertEquals(reports.length, 0);
+});
+
+Deno.test("no-unused-vars: variable used only in type assertion is still considered used", () => {
+  const code = `const obj = { target: { value: "test" } };
+const typedValue = (obj as any).target.value;
+console.log(typedValue);`;
+  const { context, reports } = createMockContext(code);
+
+  const visitor = rule.create(context);
+
+  // Variable declaration for 'obj'
+  visitor.VariableDeclarator({
+    type: "VariableDeclarator",
+    id: { type: "Identifier", name: "obj" },
+    parent: { type: "VariableDeclaration", declarations: [] },
+  });
+
+  // Variable declaration for 'typedValue'
+  visitor.VariableDeclarator({
+    type: "VariableDeclarator",
+    id: { type: "Identifier", name: "typedValue" },
+    parent: { type: "VariableDeclaration", declarations: [] },
+  });
+
+  // 'obj' is used in type assertion: (obj as any)
+  visitor.Identifier({
+    name: "obj",
+    parent: {
+      type: "TSAsExpression",
+    },
+  });
+
+  // 'typedValue' is used in console.log
+  visitor.Identifier({
+    name: "typedValue",
+    parent: { type: "CallExpression" },
+  });
+
+  if (visitor["Program:exit"]) visitor["Program:exit"]();
+
+  // Both variables are used and should not be reported
+  assertEquals(reports.length, 0);
+});

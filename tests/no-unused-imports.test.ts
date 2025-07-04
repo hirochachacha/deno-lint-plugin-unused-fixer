@@ -199,6 +199,40 @@ Deno.test("no-unused-imports: provides fix for removing entire import", () => {
   assertEquals(fixResult.node, importNode);
 });
 
+Deno.test("no-unused-imports: ignores side-effect imports", () => {
+  const code =
+    `import './styles.css';\nimport './polyfills';\nimport { unused } from './utils';\nconsole.log('test');`;
+  const { context, reports } = createMockContext(code);
+  const visitor = rule.create(context);
+
+  // Process side-effect imports
+  visitor.ImportDeclaration({
+    specifiers: [],
+    source: { value: "./styles.css" },
+  });
+
+  visitor.ImportDeclaration({
+    specifiers: [],
+    source: { value: "./polyfills" },
+  });
+
+  // Process regular import with unused specifier
+  const importNode = {
+    specifiers: [{
+      type: "ImportSpecifier",
+      local: { name: "unused" },
+      imported: { name: "unused" },
+    }],
+  };
+  visitor.ImportDeclaration(importNode);
+
+  if (visitor["Program:exit"]) visitor["Program:exit"]();
+
+  // Should only report the unused named import
+  assertEquals(reports.length, 1);
+  assertEquals(reports[0].message, "Unused import");
+});
+
 Deno.test("no-unused-imports: provides fix for removing specific named import", () => {
   const code = `import { useState, useEffect, useCallback } from 'react';`;
   const { context, reports } = createMockContext(code);

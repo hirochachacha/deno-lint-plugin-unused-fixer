@@ -6,7 +6,12 @@ export const noUnusedImports = {
 
     return {
       ImportDeclaration(node: any) {
-        node.specifiers?.forEach((spec: any) => {
+        // Skip side-effect imports (imports without specifiers)
+        if (!node.specifiers || node.specifiers.length === 0) {
+          return;
+        }
+
+        node.specifiers.forEach((spec: any) => {
           if (spec.type === "ImportDefaultSpecifier") {
             importedIdentifiers.set(spec.local.name, { node, spec });
           } else if (spec.type === "ImportSpecifier") {
